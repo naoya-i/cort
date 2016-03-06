@@ -40,9 +40,8 @@ def learn(training_corpus, instance_extractor, perceptron):
 
     logging.info("\tFitting model parameters.")
 
-    perceptron.fit(substructures, arc_information)
-
-    return perceptron.get_model()
+    for epoch, last_model in perceptron.fit(substructures, arc_information):
+        yield epoch, last_model
 
 
 def predict(testing_corpus,

@@ -188,10 +188,22 @@ class Mention:
 
         governor_id = dep_tree[index].head - 1
 
+        attributes["gov_deps"] = {}
+        attributes["governor_id"] = (i, governor_id)
+
         if governor_id == -1:
             attributes["governor"] = "NONE"
+            attributes["governor_pos"] = "NONE"
         else:
             attributes["governor"] = dep_tree[governor_id].form.lower()
+            attributes["governor_pos"] = dep_tree[governor_id].pos
+
+            # Find dependents of the governor.
+            if dep_tree[index].deprel in ["nsubj", "dobj"]:
+                for dep in xrange(len(dep_tree)):
+                    if dep_tree[dep].head - 1 == governor_id:
+                        if dep_tree[dep].deprel in ["nsubj", "dobj"]:
+                            attributes["gov_deps"][dep_tree[dep].deprel] = dep_tree[dep].form
 
         attributes["ancestry"] = Mention._get_ancestry(dep_tree, index)
 

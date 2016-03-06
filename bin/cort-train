@@ -135,13 +135,11 @@ logging.info("Extracting system mentions.")
 for doc in training_corpus:
     doc.system_mentions = mention_extractor.extract_system_mentions(doc)
 
-model = experiments.learn(
+for epoch, last_model in experiments.learn(
     training_corpus,
     extractor,
     perceptron
-)
-
-logging.info("Writing model to file.")
-pickle.dump(model, open(args.output_filename, "wb"), protocol=2)
-
-logging.info("Done.")
+):
+    logging.info("Writing model with epoch %d to file." % epoch)
+    pickle.dump(last_model, open(args.output_filename.replace(".obj", ".%d.obj" % epoch), "wb"), protocol=2)
+    logging.info("Done.")

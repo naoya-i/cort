@@ -10,7 +10,10 @@ from __future__ import division
 
 
 import re
+import sys
+sys.path += ["/home/naoya-i/work/clone/contextsensitivesp/src"]
 
+import cssp
 
 from cort.core import spans
 
@@ -433,6 +436,10 @@ def relative_overlap(anaphor, antecedent):
                                                 len(ante_tokens))
 
     return "relative_overlap", overlap
+
+
+def cssp_score(anaphor, antecedent):
+    return "cssp_score", cssp.get_cort_score(anaphor, antecedent)
 
 
 def __compute_sentence_distance(anaphor, antecedent):

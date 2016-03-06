@@ -9,7 +9,7 @@ import numpy
 
 
 __author__ = 'martscsn'
-
+FEATURE_SIZE = 2**16
 
 # for python 2 multiprocessing
 def unwrap_extract_doc(arg, **kwarg):
@@ -338,10 +338,10 @@ class InstanceExtractor:
 
         # to hash
         all_nonnumeric_feats = array.array(
-            'I', [mmh3.hash(word.encode("utf-8")) & 2 ** 24 - 1 for word
+            'I', [mmh3.hash(word.encode("utf-8")) & FEATURE_SIZE - 1 for word
                   in inst_feats])
         all_numeric_feats = array.array(
-            'I', [mmh3.hash(word.encode("utf-8")) & 2 ** 24 - 1 for word, _
+            'I', [mmh3.hash(word.encode("utf-8")) & FEATURE_SIZE - 1 for word, _
                   in numeric_features])
         numeric_vals = array.array("f", [val for _, val in numeric_features])
 

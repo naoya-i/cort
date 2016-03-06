@@ -12,6 +12,7 @@ cimport numpy
 cimport cython
 
 
+FEATURE_SIZE = 2**16
 __author__ = 'smartschat'
 
 
@@ -92,7 +93,7 @@ cdef class Perceptron:
             if weights is None:
                 for label in labels:
                     weights_for_label = array.array("d",
-                                                    (0.0 for k in range(2**24)))
+                                                    (0.0 for k in range(FEATURE_SIZE)))
                     self.weights[label] = weights_for_label
             else:
                 for label in weights:
@@ -102,7 +103,7 @@ cdef class Perceptron:
         except TypeError:
             if weights is None:
                 for label in labels:
-                    weights_for_label = numpy.zeros(2**24, dtype=float)
+                    weights_for_label = numpy.zeros(FEATURE_SIZE, dtype=float)
                     self.weights[label] = weights_for_label
             else:
                 for label in weights:
@@ -144,9 +145,9 @@ cdef class Perceptron:
 
             try:
                 cached_weights_for_label = array.array("d",
-                                                    (0.0 for k in range(2**24)))
+                                                    (0.0 for k in range(FEATURE_SIZE)))
             except TypeError:
-                cached_weights_for_label = numpy.zeros(2**24, dtype=float)
+                cached_weights_for_label = numpy.zeros(FEATURE_SIZE, dtype=float)
 
             cached_weights[label] = cached_weights_for_label
 
@@ -187,6 +188,21 @@ cdef class Perceptron:
             logging.info("Finished epoch " + str(epoch))
             logging.info("\tIncorrect predictions: " + str(incorrect) + "/" +
                          str(len(indices)))
+
+            # return the current parameters.
+            self.last_priors = {}
+            self.last_weights = {}
+
+            for label in self.priors:
+                self.last_priors[label] = self.priors[label]
+                self.last_weights[label] = self.weights[label].copy()
+
+            for label in self.last_priors:
+                self.last_priors[label] -= (1/counter)*cached_priors[label]
+                self._average_weights(self.last_weights[label], cached_weights[label], 1.0*counter)
+
+            yield epoch, self.get_last_model()
+
 
         # averaging
         for label in self.priors:
@@ -491,6 +507,27 @@ cdef class Perceptron:
             array_weights[label] = array.array("d", self.weights[label])
 
         return self.priors, array_weights
+
+    def get_last_model(self):
+        """ Get the priors and weights of the current model.
+
+        Returns:
+            A tuple containing priors and weights. The tuple consists of:
+
+            - **priors** (**dict(str, float)**): A mapping of graph labels to
+                priors for these labels.
+            - **weights** (**dict(str, array)**): A mapping of graph labels to
+                arrays. For each label ``l``, ``weights[l]`` contains
+                weights for each feature seen during training (for representing
+                the features we employ *feature hashing*). If the graphs
+                employed are not labeled, ``l`` is set to "+".
+        """
+        array_weights = {}
+
+        for label in self.last_weights:
+            array_weights[label] = array.array("d", self.last_weights[label])
+
+        return self.last_priors, array_weights
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
